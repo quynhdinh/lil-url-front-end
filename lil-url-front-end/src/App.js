@@ -1,8 +1,65 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, useParams } from 'react-router-dom';
 import './App.css';
 
-function App() {
-  const [longUrl, setLongUrl] = useState('');
+// Component to handle redirects for shortened URLs
+function RedirectHandler() {
+  const { code } = useParams();
+  
+  useEffect(() => {
+    const handleRedirect = async () => {
+      try {
+        const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8080';
+        console.log('Redirecting with code:', code);
+        
+        const response = await fetch(`${backendUrl}/api/urls/${code}`, {
+          method: 'GET',
+        }); 
+        console.log(response)
+        console.log('Response status:', response.status);
+
+        if (response.ok) {
+          const data = await response.json();
+          // Assuming backend returns { originalUrl: "https://google.com" }
+          const originalUrl = data.originalUrl || data.url;
+          if (originalUrl) {
+            // Redirect to the original URL
+            window.location.href = originalUrl;
+          } else {
+            alert('URL not found');
+          }
+        } else {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+      } catch (error) {
+        console.error('Error redirecting:', error);
+        alert('Error: Shortened URL not found or expired.');
+      }
+    };
+
+    if (code) {
+      handleRedirect();
+    }
+  }, [code]);
+
+  return (
+    <div style={{ 
+      display: 'flex', 
+      justifyContent: 'center', 
+      alignItems: 'center', 
+      height: '100vh', 
+      fontSize: '18px' 
+    }}>
+      <div>
+        <p>Redirecting...</p>
+        <p>If you are not redirected automatically, the URL may be invalid or expired.</p>
+      </div>
+    </div>
+  );
+}
+
+function MainApp() {
+  const [longUrl, setLongUrl] = useState('https://www.nbcnews.com/news/obituaries/ozzy-osbourne-photos-young-black-sabbath-final-concert-before-death-rcna220337?utm_source=firefox-newtab-en-us');
   const [shortenedUrl, setShortenedUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showSignUpModal, setShowSignUpModal] = useState(false);
@@ -75,6 +132,34 @@ function App() {
   const copyToClipboard = () => {
     navigator.clipboard.writeText(shortenedUrl);
     alert('URL copied to clipboard!');
+  };
+
+  const handleRedirect = async (code) => {
+    try {
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8080';
+      console.log('Redirecting with code:', code);
+      
+      const response = await fetch(`${backendUrl}/${code}`, {
+        method: 'GET',
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        // Assuming backend returns { originalUrl: "https://google.com" }
+        const originalUrl = data.originalUrl || data.url;
+        if (originalUrl) {
+          // Redirect to the original URL
+          window.location.href = originalUrl;
+        } else {
+          alert('URL not found');
+        }
+      } else {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+    } catch (error) {
+      console.error('Error redirecting:', error);
+      alert('Error: Shortened URL not found or expired.');
+    }
   };
 
   const handleSignUp = (e) => {
@@ -178,6 +263,17 @@ function App() {
                       />
                       <button onClick={copyToClipboard} className="copy-btn">
                         Copy
+                      </button>
+                      <button 
+                        onClick={() => {
+                          // Extract the code from the shortened URL
+                          const code = shortenedUrl.split('/').pop();
+                          handleRedirect(code);
+                        }} 
+                        className="copy-btn"
+                        style={{marginLeft: '8px'}}
+                      >
+                        Test Redirect
                       </button>
                     </div>
                   </div>
@@ -619,6 +715,17 @@ function App() {
         </div>
       )}
     </div>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<MainApp />} />
+        <Route path="/:code" element={<RedirectHandler />} />
+      </Routes>
+    </Router>
   );
 }
 
