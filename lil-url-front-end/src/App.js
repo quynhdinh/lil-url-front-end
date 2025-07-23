@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useParams } from 'react-router-dom';
 import './App.css';
 
-// Component to handle redirects for shortened URLs
 function RedirectHandler() {
   const { code } = useParams();
   
@@ -16,9 +15,6 @@ function RedirectHandler() {
         const response = await fetch(`${backendUrl}/api/urls/${code}`, {
           method: 'GET',
         }); 
-        console.log(response)
-        console.log('Response status:', response.status);
-
         if (response.ok) {
           console.log("received")
           const data = await response.json();
@@ -116,9 +112,15 @@ function MainApp() {
       }
 
       const data = await response.json();
+      console.log('Shortened URL response:', data);
       
-      // Assuming the backend returns { shortUrl: "https://lil.url/abc123" }
-      setShortenedUrl(data.shortUrl || data.shortened_url || data.url);
+      // Construct the shortened URL using the frontend host and the short code
+      const frontendHost = process.env.REACT_APP_FRONTEND_URL || window.location.origin;
+      const constructedShortUrl = `${frontendHost}/${data.shortCode}`;
+      console.log('Constructed short URL:', constructedShortUrl);
+      
+      // Set the shortened URL to display
+      setShortenedUrl(data.shortUrl || constructedShortUrl || data.url);
       
       // Clear the input after successful shortening
       setLongUrl('');
@@ -277,6 +279,30 @@ function MainApp() {
                       >
                         Test Redirect
                       </button>
+                    </div>
+                    {/* Clickable shortened URL */}
+                    <div className="clickable-url-container" style={{marginTop: '10px'}}>
+                      <span className="result-label">Click to test:</span>
+                      <a 
+                        href={shortenedUrl} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="clickable-short-url"
+                        style={{
+                          display: 'block',
+                          padding: '10px',
+                          backgroundColor: '#f5f5f5',
+                          border: '1px solid #ddd',
+                          borderRadius: '4px',
+                          textDecoration: 'none',
+                          color: '#007bff',
+                          fontSize: '14px',
+                          marginTop: '5px',
+                          wordBreak: 'break-all'
+                        }}
+                      >
+                        {shortenedUrl}
+                      </a>
                     </div>
                   </div>
                 </div>
@@ -555,6 +581,30 @@ function MainApp() {
                       <button onClick={copyToClipboard} className="copy-btn">
                         Copy
                       </button>
+                    </div>
+                    {/* Clickable shortened URL */}
+                    <div className="clickable-url-container" style={{marginTop: '10px'}}>
+                      <span className="result-label">Click to test:</span>
+                      <a 
+                        href={shortenedUrl} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="clickable-short-url"
+                        style={{
+                          display: 'block',
+                          padding: '10px',
+                          backgroundColor: '#f5f5f5',
+                          border: '1px solid #ddd',
+                          borderRadius: '4px',
+                          textDecoration: 'none',
+                          color: '#007bff',
+                          fontSize: '14px',
+                          marginTop: '5px',
+                          wordBreak: 'break-all'
+                        }}
+                      >
+                        {shortenedUrl}
+                      </a>
                     </div>
                   </div>
                 </div>
