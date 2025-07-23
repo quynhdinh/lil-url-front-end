@@ -38,15 +38,35 @@ function App() {
 
     setIsLoading(true);
     try {
-      // TODO: Replace with actual API call to your backend
-      // For now, we'll simulate the API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8080';
+      console.log('Backend URL:', backendUrl);
+      const response = await fetch(`${backendUrl}/api/shorten`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          url: longUrl.trim(),
+          // Include user ID if logged in
+          ...(isLoggedIn && currentUser && { userId: currentUser.email })
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
       
-      // Generate a mock shortened URL for demonstration
-      const mockShortUrl = `https://lil.url/${Math.random().toString(36).substring(2, 8)}`;
-      setShortenedUrl(mockShortUrl);
+      // Assuming the backend returns { shortUrl: "https://lil.url/abc123" }
+      setShortenedUrl(data.shortUrl || data.shortened_url || data.url);
+      
+      // Clear the input after successful shortening
+      setLongUrl('');
+      
     } catch (error) {
-      alert('Error shortening URL. Please try again.');
+      console.error('Error shortening URL:', error);
+      alert('Error shortening URL. Please check if the backend is running and try again.');
     } finally {
       setIsLoading(false);
     }
