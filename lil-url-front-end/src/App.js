@@ -10,13 +10,11 @@ function RedirectHandler() {
       try {
         const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8080';
         console.log('Redirecting with code:', code);
-        console.log('Backend URL:', backendUrl);
         
         const response = await fetch(`${backendUrl}/api/urls/${code}`, {
           method: 'GET',
         }); 
         if (response.ok) {
-          console.log("received")
           const data = await response.json();
           // Assuming backend returns { originalUrl: "https://google.com" }
           const originalUrl = data.originalUrl || data.url;
@@ -82,7 +80,8 @@ function MainApp() {
   // Sign in form state
   const [signInData, setSignInData] = useState({
     email: 'john.doe@example.com',
-    password: 'password123'
+    password: 'password123',
+    id: 1
   });
 
   const handleShortenUrl = async () => {
@@ -94,7 +93,6 @@ function MainApp() {
     setIsLoading(true);
     try {
       const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8080';
-      console.log('Backend URL:', backendUrl);
       const response = await fetch(`${backendUrl}/api/shorten`, {
         method: 'POST',
         headers: {
@@ -103,7 +101,7 @@ function MainApp() {
         body: JSON.stringify({
           url: longUrl.trim(),
           // Include user ID if logged in
-          ...(isLoggedIn && currentUser && { userId: currentUser.email })
+          ...(isLoggedIn && currentUser && { userId: currentUser.id })
         }),
       });
 
@@ -112,12 +110,12 @@ function MainApp() {
       }
 
       const data = await response.json();
-      console.log('Shortened URL response:', data);
+      // console.log('Shortened URL response:', data);
       
       // Construct the shortened URL using the frontend host and the short code
       const frontendHost = process.env.REACT_APP_FRONTEND_URL || window.location.origin;
       const constructedShortUrl = `${frontendHost}/${data.shortCode}`;
-      console.log('Constructed short URL:', constructedShortUrl);
+      // console.log('Constructed short URL:', constructedShortUrl);
       
       // Set the shortened URL to display
       setShortenedUrl(data.shortUrl || constructedShortUrl || data.url);
@@ -183,11 +181,12 @@ function MainApp() {
     // Mock successful login
     setCurrentUser({
       name: signInData.email === 'john.doe@example.com' ? 'John Doe' : 'User',
-      email: signInData.email
+      email: signInData.email,
+      id: signInData.id
     });
     setIsLoggedIn(true);
     setShowSignInModal(false);
-    setSignInData({ email: 'john.doe@example.com', password: 'password123' });
+    setSignInData({ email: 'john.doe@example.com', password: 'password123', id: 1 });
   };
 
   const handleLogout = () => {
@@ -214,7 +213,8 @@ function MainApp() {
     // Update current user data
     setCurrentUser({
       name: editProfileData.name,
-      email: editProfileData.email
+      email: editProfileData.email,
+      id: currentUser.id
     });
     
     alert('Profile updated successfully!');
@@ -226,7 +226,7 @@ function MainApp() {
     setShowSignInModal(false);
     setShowEditProfile(false);
     setSignUpData({ name: 'John Doe', email: 'john.doe@example.com', password: 'password123' });
-    setSignInData({ email: 'john.doe@example.com', password: 'password123' });
+    setSignInData({ email: 'john.doe@example.com', password: 'password123', id: 1 });
   };
 
   const renderDashboardContent = () => {
@@ -438,7 +438,7 @@ function MainApp() {
       <header className="App-nav">
         <div className="nav-container">
           <div className="logo">
-            <h1>lil url</h1>
+            <h1>Little URL</h1>
           </div>
           <div className="auth-buttons">
             {isLoggedIn ? (
@@ -741,7 +741,7 @@ function MainApp() {
                   id="signin-email"
                   type="email"
                   value={signInData.email}
-                  onChange={(e) => setSignInData({...signInData, email: e.target.value})}
+                  onChange={(e) => setSignInData({...signInData, email: e.target.value, id: 1})}
                   className="form-input"
                   placeholder="john.doe@example.com"
                   required
@@ -753,7 +753,7 @@ function MainApp() {
                   id="signin-password"
                   type="password"
                   value={signInData.password}
-                  onChange={(e) => setSignInData({...signInData, password: e.target.value})}
+                  onChange={(e) => setSignInData({...signInData, password: e.target.value, id: 1})}
                   className="form-input"
                   placeholder="Enter your password"
                   required
