@@ -10,6 +10,7 @@ function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [showEditProfile, setShowEditProfile] = useState(false);
+  const [activeSection, setActiveSection] = useState('dashboard');
   const [editProfileData, setEditProfileData] = useState({
     name: '',
     email: '',
@@ -84,6 +85,7 @@ function App() {
     setIsLoggedIn(false);
     setCurrentUser(null);
     setShowEditProfile(false);
+    setActiveSection('dashboard');
   };
 
   const handleEditProfile = () => {
@@ -118,6 +120,174 @@ function App() {
     setSignInData({ email: 'john.doe@example.com', password: 'password123' });
   };
 
+  const renderDashboardContent = () => {
+    switch (activeSection) {
+      case 'dashboard':
+        return (
+          <div className="dashboard-content">
+            <div className="url-shortener">
+              <h3 className="section-title">Shorten a New URL</h3>
+              <div className="input-container">
+                <input
+                  type="url"
+                  placeholder="Enter your long URL here..."
+                  value={longUrl}
+                  onChange={(e) => setLongUrl(e.target.value)}
+                  className="url-input"
+                  onKeyPress={(e) => e.key === 'Enter' && handleShortenUrl()}
+                />
+                <button 
+                  onClick={handleShortenUrl}
+                  disabled={isLoading}
+                  className="shorten-btn"
+                >
+                  {isLoading ? 'Shortening...' : 'Shorten URL'}
+                </button>
+              </div>
+              
+              {shortenedUrl && (
+                <div className="result-container">
+                  <div className="shortened-url">
+                    <span className="result-label">Your shortened URL:</span>
+                    <div className="url-result">
+                      <input
+                        type="text"
+                        value={shortenedUrl}
+                        readOnly
+                        className="result-input"
+                      />
+                      <button onClick={copyToClipboard} className="copy-btn">
+                        Copy
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="user-stats">
+              <h3 className="section-title">Your Statistics</h3>
+              <div className="stats-grid">
+                <div className="stat-card">
+                  <div className="stat-number">12</div>
+                  <div className="stat-label">URLs Shortened</div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-number">248</div>
+                  <div className="stat-label">Total Clicks</div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-number">5</div>
+                  <div className="stat-label">Active URLs</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      case 'urls':
+        return (
+          <div className="urls-section">
+            <h3 className="section-title">My URLs</h3>
+            <div className="urls-list">
+              <div className="url-item">
+                <div className="url-info">
+                  <div className="original-url">https://www.example.com/very-long-url-that-needs-shortening</div>
+                  <div className="short-url">https://lil.url/abc123</div>
+                  <div className="url-stats">Created: Jan 15, 2025 • Clicks: 45</div>
+                </div>
+                <div className="url-actions">
+                  <button className="action-btn copy-btn">Copy</button>
+                  <button className="action-btn edit-btn">Edit</button>
+                  <button className="action-btn delete-btn">Delete</button>
+                </div>
+              </div>
+              <div className="url-item">
+                <div className="url-info">
+                  <div className="original-url">https://github.com/user/repository</div>
+                  <div className="short-url">https://lil.url/def456</div>
+                  <div className="url-stats">Created: Jan 10, 2025 • Clicks: 23</div>
+                </div>
+                <div className="url-actions">
+                  <button className="action-btn copy-btn">Copy</button>
+                  <button className="action-btn edit-btn">Edit</button>
+                  <button className="action-btn delete-btn">Delete</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      case 'analytics':
+        return (
+          <div className="analytics-section">
+            <h3 className="section-title">Analytics</h3>
+            <div className="analytics-content">
+              <div className="analytics-card">
+                <h4>Top Performing URLs</h4>
+                <div className="analytics-list">
+                  <div className="analytics-item">
+                    <span>lil.url/abc123</span>
+                    <span>45 clicks</span>
+                  </div>
+                  <div className="analytics-item">
+                    <span>lil.url/def456</span>
+                    <span>23 clicks</span>
+                  </div>
+                </div>
+              </div>
+              <div className="analytics-card">
+                <h4>Recent Activity</h4>
+                <div className="analytics-list">
+                  <div className="analytics-item">
+                    <span>New URL created</span>
+                    <span>2 hours ago</span>
+                  </div>
+                  <div className="analytics-item">
+                    <span>URL clicked 5 times</span>
+                    <span>1 day ago</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      case 'settings':
+        return (
+          <div className="settings-section">
+            <h3 className="section-title">Account Settings</h3>
+            <div className="settings-content">
+              <div className="setting-item">
+                <h4>Profile Information</h4>
+                <p>Update your name, email, and password</p>
+                <button className="settings-btn" onClick={handleEditProfile}>
+                  Edit Profile
+                </button>
+              </div>
+              <div className="setting-item">
+                <h4>Notifications</h4>
+                <p>Manage your email notifications</p>
+                <label className="toggle-switch">
+                  <input type="checkbox" defaultChecked />
+                  <span className="toggle-slider"></span>
+                  Email notifications
+                </label>
+              </div>
+              <div className="setting-item">
+                <h4>Privacy</h4>
+                <p>Control your data and privacy settings</p>
+                <label className="toggle-switch">
+                  <input type="checkbox" defaultChecked />
+                  <span className="toggle-slider"></span>
+                  Public URL analytics
+                </label>
+              </div>
+            </div>
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="App">
       {/* Header with Sign Up/Sign In buttons */}
@@ -130,12 +300,6 @@ function App() {
             {isLoggedIn ? (
               <>
                 <span className="user-welcome">Welcome, {currentUser?.name}!</span>
-                <button 
-                  className="auth-btn edit-profile-btn"
-                  onClick={handleEditProfile}
-                >
-                  Edit Profile
-                </button>
                 <button 
                   className="auth-btn logout-btn"
                   onClick={handleLogout}
@@ -166,72 +330,71 @@ function App() {
       {/* Main content */}
       <main className="main-content">
         {isLoggedIn ? (
-          <div className="user-dashboard">
-            <div className="dashboard-header">
-              <h2 className="dashboard-title">Welcome to your Dashboard, {currentUser?.name}!</h2>
-              <p className="dashboard-subtitle">
-                Manage your shortened URLs and account settings
-              </p>
-            </div>
-            
-            <div className="dashboard-content">
-              <div className="url-shortener">
-                <h3 className="section-title">Shorten a New URL</h3>
-                <div className="input-container">
-                  <input
-                    type="url"
-                    placeholder="Enter your long URL here..."
-                    value={longUrl}
-                    onChange={(e) => setLongUrl(e.target.value)}
-                    className="url-input"
-                    onKeyPress={(e) => e.key === 'Enter' && handleShortenUrl()}
-                  />
-                  <button 
-                    onClick={handleShortenUrl}
-                    disabled={isLoading}
-                    className="shorten-btn"
-                  >
-                    {isLoading ? 'Shortening...' : 'Shorten URL'}
-                  </button>
+          <div className="dashboard-layout">
+            {/* Sidebar */}
+            <aside className="sidebar">
+              <div className="sidebar-content">
+                <div className="user-profile">
+                  <div className="user-avatar">
+                    {currentUser?.name?.charAt(0)?.toUpperCase()}
+                  </div>
+                  <div className="user-info">
+                    <h4>{currentUser?.name}</h4>
+                    <p>{currentUser?.email}</p>
+                  </div>
                 </div>
                 
-                {shortenedUrl && (
-                  <div className="result-container">
-                    <div className="shortened-url">
-                      <span className="result-label">Your shortened URL:</span>
-                      <div className="url-result">
-                        <input
-                          type="text"
-                          value={shortenedUrl}
-                          readOnly
-                          className="result-input"
-                        />
-                        <button onClick={copyToClipboard} className="copy-btn">
-                          Copy
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
+                <nav className="sidebar-nav">
+                  <button 
+                    className={`nav-item ${activeSection === 'dashboard' ? 'active' : ''}`}
+                    onClick={() => setActiveSection('dashboard')}
+                  >
+                    <span className="nav-icon">📊</span>
+                    Dashboard
+                  </button>
+                  <button 
+                    className={`nav-item ${activeSection === 'urls' ? 'active' : ''}`}
+                    onClick={() => setActiveSection('urls')}
+                  >
+                    <span className="nav-icon">🔗</span>
+                    My URLs
+                  </button>
+                  <button 
+                    className={`nav-item ${activeSection === 'analytics' ? 'active' : ''}`}
+                    onClick={() => setActiveSection('analytics')}
+                  >
+                    <span className="nav-icon">📈</span>
+                    Analytics
+                  </button>
+                  <button 
+                    className={`nav-item ${activeSection === 'settings' ? 'active' : ''}`}
+                    onClick={() => setActiveSection('settings')}
+                  >
+                    <span className="nav-icon">⚙️</span>
+                    Settings
+                  </button>
+                </nav>
               </div>
+            </aside>
 
-              <div className="user-stats">
-                <h3 className="section-title">Your Statistics</h3>
-                <div className="stats-grid">
-                  <div className="stat-card">
-                    <div className="stat-number">12</div>
-                    <div className="stat-label">URLs Shortened</div>
-                  </div>
-                  <div className="stat-card">
-                    <div className="stat-number">248</div>
-                    <div className="stat-label">Total Clicks</div>
-                  </div>
-                  <div className="stat-card">
-                    <div className="stat-number">5</div>
-                    <div className="stat-label">Active URLs</div>
-                  </div>
-                </div>
+            {/* Main Dashboard Content */}
+            <div className="dashboard-main">
+              <div className="dashboard-header">
+                <h2 className="dashboard-title">
+                  {activeSection === 'dashboard' && `Welcome back, ${currentUser?.name}!`}
+                  {activeSection === 'urls' && 'My URLs'}
+                  {activeSection === 'analytics' && 'Analytics'}
+                  {activeSection === 'settings' && 'Settings'}
+                </h2>
+                <p className="dashboard-subtitle">
+                  {activeSection === 'dashboard' && 'Manage your shortened URLs and account settings'}
+                  {activeSection === 'urls' && 'View and manage all your shortened URLs'}
+                  {activeSection === 'analytics' && 'Track your URL performance and statistics'}
+                  {activeSection === 'settings' && 'Manage your account preferences'}
+                </p>
               </div>
+              
+              {renderDashboardContent()}
             </div>
           </div>
         ) : (
