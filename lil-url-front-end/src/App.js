@@ -11,6 +11,7 @@ function RedirectHandler() {
       try {
         const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8080';
         console.log('Redirecting with code:', code);
+        console.log('Backend URL:', backendUrl);
         
         const response = await fetch(`${backendUrl}/api/urls/${code}`, {
           method: 'GET',
@@ -19,6 +20,7 @@ function RedirectHandler() {
         console.log('Response status:', response.status);
 
         if (response.ok) {
+          console.log("received")
           const data = await response.json();
           // Assuming backend returns { originalUrl: "https://google.com" }
           const originalUrl = data.originalUrl || data.url;
