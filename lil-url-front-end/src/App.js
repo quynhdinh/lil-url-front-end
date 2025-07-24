@@ -29,7 +29,6 @@ function RedirectHandler() {
         }
       } catch (error) {
         console.error('Error redirecting:', error);
-        alert('Error: Shortened URL not found or expired.');
       }
     };
 
@@ -438,7 +437,7 @@ function MainApp() {
       <header className="App-nav">
         <div className="nav-container">
           <div className="logo">
-            <h1>Little URL</h1>
+            <h1>Baby URL</h1>
           </div>
           <div className="auth-buttons">
             {isLoggedIn ? (
@@ -545,7 +544,7 @@ function MainApp() {
           <div className="hero-section">
             <h2 className="hero-title">Shorten Your URLs</h2>
             <p className="hero-subtitle">
-              Transform your long URLs into short, shareable links with lil url
+              Transform your long URLs into short, shareable links with Baby URL.
             </p>
             
             <div className="url-shortener">
@@ -618,7 +617,7 @@ function MainApp() {
       <footer className="App-footer">
         <div className="footer-container">
           <p className="footer-text">
-            This is a project developed as part of coursework at MIU University
+            This is a project developed as part of the Software Engineering course at Maharishi International University.
           </p>
         </div>
       </footer>
