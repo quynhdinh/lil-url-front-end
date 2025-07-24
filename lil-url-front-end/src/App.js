@@ -83,6 +83,17 @@ function MainApp() {
     id: 1
   });
 
+  // Check for existing authentication token on app load
+  useEffect(() => {
+    const token = localStorage.getItem('authToken');
+    if (token) {
+      // TODO: Validate token with backend if needed
+      // For now, we'll assume the token is valid
+      // You might want to add a token validation endpoint later
+      console.log('Found existing auth token');
+    }
+  }, []);
+
   const handleShortenUrl = async () => {
     if (!longUrl.trim()) {
       alert('Please enter a URL to shorten');
@@ -163,32 +174,100 @@ function MainApp() {
     }
   };
 
-  const handleSignUp = (e) => {
+  const handleSignUp = async (e) => {
     e.preventDefault();
-    // TODO: Implement actual sign up logic
-    console.log('Sign up:', signUpData);
-    alert('Sign up functionality will be implemented with backend!');
-    setShowSignUpModal(false);
-    setSignUpData({ name: 'John Doe', email: 'john.doe@example.com', password: 'password123' });
+    
+    try {
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8080';
+      
+      const response = await fetch(`${backendUrl}/api/auth/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          fullName: signUpData.name,
+          email: signUpData.email,
+          password: signUpData.password
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('Sign up successful:', data);
+      
+      // Show success message
+      alert('Account created successfully! You can now sign in.');
+      
+      // Close modal and reset form
+      setShowSignUpModal(false);
+      setSignUpData({ name: 'John Doe', email: 'john.doe@example.com', password: 'password123' });
+      
+      // Optionally open sign in modal
+      setShowSignInModal(true);
+      
+    } catch (error) {
+      console.error('Error signing up:', error);
+      alert(`Error creating account: ${error.message}`);
+    }
   };
 
-  const handleSignIn = (e) => {
+  const handleSignIn = async (e) => {
     e.preventDefault();
-    // TODO: Implement actual sign in logic
-    console.log('Sign in:', signInData);
     
-    // Mock successful login
-    setCurrentUser({
-      name: signInData.email === 'john.doe@example.com' ? 'John Doe' : 'User',
-      email: signInData.email,
-      id: signInData.id
-    });
-    setIsLoggedIn(true);
-    setShowSignInModal(false);
-    setSignInData({ email: 'john.doe@example.com', password: 'password123', id: 1 });
+    try {
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8080';
+      
+      const response = await fetch(`${backendUrl}/api/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: signInData.email,
+          password: signInData.password
+        }),
+      });
+      console.log("Response received:", response);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('Sign in successful:', data);
+      
+      // Set user data from backend response
+      setCurrentUser({
+        name: data.user?.fullName || data.user?.name || 'User',
+        email: data.user?.email || signInData.email,
+        id: data.user?.id || data.user?._id || 1
+      });
+      
+      // Store token if provided (for future authenticated requests)
+      if (data.token) {
+        localStorage.setItem('authToken', data.token);
+      }
+      
+      setIsLoggedIn(true);
+      setShowSignInModal(false);
+      setSignInData({ email: data.email, password: data.password, id: data.id });
+
+    } catch (error) {
+      console.error('Error signing in:', error);
+      alert(`Error signing in: ${error.message}`);
+    }
   };
 
   const handleLogout = () => {
+    // Clear stored authentication token
+    localStorage.removeItem('authToken');
+    
     setIsLoggedIn(false);
     setCurrentUser(null);
     setShowEditProfile(false);
