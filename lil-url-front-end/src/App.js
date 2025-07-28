@@ -72,13 +72,13 @@ function MainApp() {
   // Sign up form state
   const [signUpData, setSignUpData] = useState({
     name: 'John Doe',
-    email: 'john.doe@example.com',
+    email: 'john.doe@miu.edu',
     password: 'password123'
   });
   
   // Sign in form state
   const [signInData, setSignInData] = useState({
-    email: 'john.doe@example.com',
+    email: 'john.doe@miu.edu',
     password: 'password123',
     id: 1
   });
@@ -86,11 +86,20 @@ function MainApp() {
   // Check for existing authentication token on app load
   useEffect(() => {
     const token = localStorage.getItem('authToken');
-    if (token) {
-      // TODO: Validate token with backend if needed
-      // For now, we'll assume the token is valid
-      // You might want to add a token validation endpoint later
-      console.log('Found existing auth token');
+    const userData = localStorage.getItem('userData');
+    
+    if (token && userData) {
+      try {
+        const user = JSON.parse(userData);
+        setCurrentUser(user);
+        setIsLoggedIn(true);
+        console.log('Restored user session from localStorage:', user);
+      } catch (error) {
+        console.error('Error parsing stored user data:', error);
+        // Clear invalid data
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('userData');
+      }
     }
   }, []);
 
@@ -205,7 +214,7 @@ function MainApp() {
       
       // Close modal and reset form
       setShowSignUpModal(false);
-      setSignUpData({ name: 'John Doe', email: 'john.doe@example.com', password: 'password123' });
+      setSignUpData({ name: 'John Doe', email: 'john.doe@miu.edu', password: 'password123' });
       
       // Optionally open sign in modal
       setShowSignInModal(true);
@@ -242,17 +251,23 @@ function MainApp() {
       const data = await response.json();
       console.log('Sign in successful:', data);
       
+      console.log(data);
       // Set user data from backend response
-      setCurrentUser({
-        name: data.user?.fullName || data.user?.name || 'User',
-        email: data.user?.email || signInData.email,
-        id: data.user?.id || data.user?._id || 1
-      });
+      const userData = {
+        name: data.fullName || data.name || 'User',
+        email: data.email || signInData.email,
+        id: data.id || data._id || 1
+      };
+      
+      setCurrentUser(userData);
       
       // Store token if provided (for future authenticated requests)
       if (data.token) {
         localStorage.setItem('authToken', data.token);
       }
+      
+      // Store user data in localStorage for session persistence
+      localStorage.setItem('userData', JSON.stringify(userData));
       
       setIsLoggedIn(true);
       setShowSignInModal(false);
@@ -265,8 +280,9 @@ function MainApp() {
   };
 
   const handleLogout = () => {
-    // Clear stored authentication token
+    // Clear stored authentication token and user data
     localStorage.removeItem('authToken');
+    localStorage.removeItem('userData');
     
     setIsLoggedIn(false);
     setCurrentUser(null);
@@ -303,8 +319,8 @@ function MainApp() {
     setShowSignUpModal(false);
     setShowSignInModal(false);
     setShowEditProfile(false);
-    setSignUpData({ name: 'John Doe', email: 'john.doe@example.com', password: 'password123' });
-    setSignInData({ email: 'john.doe@example.com', password: 'password123', id: 1 });
+    setSignUpData({ name: 'John Doe', email: 'john.doe@miu.edu', password: 'password123' });
+    setSignInData({ email: 'john.doe@miu.edu', password: 'password123', id: 1 });
   };
 
   const renderDashboardContent = () => {
@@ -780,7 +796,7 @@ function MainApp() {
                   value={signUpData.email}
                   onChange={(e) => setSignUpData({...signUpData, email: e.target.value})}
                   className="form-input"
-                  placeholder="john.doe@example.com"
+                  placeholder="john.doe@miu.edu"
                   required
                 />
               </div>
@@ -821,7 +837,7 @@ function MainApp() {
                   value={signInData.email}
                   onChange={(e) => setSignInData({...signInData, email: e.target.value, id: 1})}
                   className="form-input"
-                  placeholder="john.doe@example.com"
+                  placeholder="john.doe@miu.edu"
                   required
                 />
               </div>
