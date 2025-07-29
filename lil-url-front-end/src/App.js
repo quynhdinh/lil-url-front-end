@@ -56,6 +56,7 @@ function RedirectHandler() {
 function MainApp() {
   const [longUrl, setLongUrl] = useState('https://www.nbcnews.com/news/obituaries/ozzy-osbourne-photos-young-black-sabbath-final-concert-before-death-rcna220337?utm_source=firefox-newtab-en-us');
   const [shortenedUrl, setShortenedUrl] = useState('');
+  const [customShortCode, setCustomShortCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showSignUpModal, setShowSignUpModal] = useState(false);
   const [showSignInModal, setShowSignInModal] = useState(false);
@@ -179,7 +180,9 @@ function MainApp() {
         body: JSON.stringify({
           url: longUrl.trim(),
           // Include user ID if logged in
-          ...(isLoggedIn && currentUser && { userId: currentUser.id })
+          ...(isLoggedIn && currentUser && { userId: currentUser.id }),
+          // Include custom short code if provided and user is logged in
+          ...(isLoggedIn && customShortCode.trim() && { customCode: customShortCode.trim() })
         }),
       });
 
@@ -200,6 +203,7 @@ function MainApp() {
       
       // Clear the input after successful shortening
       setLongUrl('');
+      setCustomShortCode(''); // Clear custom short code as well
       
       // Refresh user URLs if user is logged in
       if (isLoggedIn && currentUser?.id) {
@@ -404,6 +408,26 @@ function MainApp() {
                   className="url-input"
                   onKeyPress={(e) => e.key === 'Enter' && handleShortenUrl()}
                 />
+                {isLoggedIn && (
+                  <input
+                    type="text"
+                    placeholder="Custom short code (optional) - e.g., mylink123"
+                    value={customShortCode}
+                    onChange={(e) => {
+                      // Allow only alphanumeric characters, hyphens, and underscores
+                      const value = e.target.value.replace(/[^a-zA-Z0-9\-_]/g, '');
+                      setCustomShortCode(value);
+                    }}
+                    className="url-input"
+                    style={{ 
+                      marginTop: '10px',
+                      width: '60%',
+                      maxWidth: '300px'
+                    }}
+                    onKeyPress={(e) => e.key === 'Enter' && handleShortenUrl()}
+                    maxLength={50}
+                  />
+                )}
                 <button 
                   onClick={handleShortenUrl}
                   disabled={isLoading}
@@ -763,6 +787,26 @@ function MainApp() {
                   className="url-input"
                   onKeyPress={(e) => e.key === 'Enter' && handleShortenUrl()}
                 />
+                {isLoggedIn && (
+                  <input
+                    type="text"
+                    placeholder="Custom short code (optional) - e.g., mylink123"
+                    value={customShortCode}
+                    onChange={(e) => {
+                      // Allow only alphanumeric characters, hyphens, and underscores
+                      const value = e.target.value.replace(/[^a-zA-Z0-9\-_]/g, '');
+                      setCustomShortCode(value);
+                    }}
+                    className="url-input"
+                    style={{ 
+                      marginTop: '10px',
+                      width: '60%',
+                      maxWidth: '300px'
+                    }}
+                    onKeyPress={(e) => e.key === 'Enter' && handleShortenUrl()}
+                    maxLength={50}
+                  />
+                )}
                 <button 
                   onClick={handleShortenUrl}
                   disabled={isLoading}
