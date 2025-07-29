@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { BrowserRouter as Router, Routes, Route, useParams } from 'react-router-dom';
 import './App.css';
 
@@ -63,6 +63,8 @@ function MainApp() {
   const [currentUser, setCurrentUser] = useState(null);
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [activeSection, setActiveSection] = useState('dashboard');
+  const [userUrls, setUserUrls] = useState([]);
+  const [isLoadingUrls, setIsLoadingUrls] = useState(false);
   const [editProfileData, setEditProfileData] = useState({
     name: '',
     email: '',
@@ -83,6 +85,49 @@ function MainApp() {
     id: 1
   });
 
+  // Define fetchUserUrls function before useEffect hooks
+  const fetchUserUrls = useCallback(async () => {
+    if (!currentUser?.id) {
+      console.log('No user ID available for fetching URLs');
+      return;
+    }
+
+    setIsLoadingUrls(true);
+    try {
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8080';
+      const token = localStorage.getItem('authToken');
+      
+      const headers = {
+        'Content-Type': 'application/json',
+      };
+      
+      // Add authorization header if token exists
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const response = await fetch(`${backendUrl}/api/users/${currentUser.id}/urls`, {
+        method: 'GET',
+        headers: headers,
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('Fetched user URLs:', data);
+      setUserUrls(data);
+      
+    } catch (error) {
+      console.error('Error fetching user URLs:', error);
+      // Don't show alert for this error, just log it
+      setUserUrls([]); // Set empty array on error
+    } finally {
+      setIsLoadingUrls(false);
+    }
+  }, [currentUser?.id]);
+
   // Check for existing authentication token on app load
   useEffect(() => {
     const token = localStorage.getItem('authToken');
@@ -102,6 +147,20 @@ function MainApp() {
       }
     }
   }, []);
+
+  // Fetch user URLs when user logs in
+  useEffect(() => {
+    if (isLoggedIn && currentUser?.id) {
+      fetchUserUrls();
+    }
+  }, [isLoggedIn, currentUser?.id, fetchUserUrls]);
+
+  // Fetch user URLs when switching to URLs section
+  useEffect(() => {
+    if (activeSection === 'urls' && isLoggedIn && currentUser?.id) {
+      fetchUserUrls();
+    }
+  }, [activeSection, isLoggedIn, currentUser?.id, fetchUserUrls]);
 
   const handleShortenUrl = async () => {
     if (!longUrl.trim()) {
@@ -141,6 +200,11 @@ function MainApp() {
       
       // Clear the input after successful shortening
       setLongUrl('');
+      
+      // Refresh user URLs if user is logged in
+      if (isLoggedIn && currentUser?.id) {
+        fetchUserUrls();
+      }
       
     } catch (error) {
       console.error('Error shortening URL:', error);
@@ -288,6 +352,7 @@ function MainApp() {
     setCurrentUser(null);
     setShowEditProfile(false);
     setActiveSection('dashboard');
+    setUserUrls([]); // Clear user URLs on logout
   };
 
   const handleEditProfile = () => {
@@ -362,17 +427,6 @@ function MainApp() {
                       <button onClick={copyToClipboard} className="copy-btn">
                         Copy
                       </button>
-                      <button 
-                        onClick={() => {
-                          // Extract the code from the shortened URL
-                          const code = shortenedUrl.split('/').pop();
-                          handleRedirect(code);
-                        }} 
-                        className="copy-btn"
-                        style={{marginLeft: '8px'}}
-                      >
-                        Test Redirect
-                      </button>
                     </div>
                     {/* Clickable shortened URL */}
                     <div className="clickable-url-container" style={{marginTop: '10px'}}>
@@ -407,15 +461,15 @@ function MainApp() {
               <h3 className="section-title">Your Statistics</h3>
               <div className="stats-grid">
                 <div className="stat-card">
-                  <div className="stat-number">12</div>
+                  <div className="stat-number">{userUrls.length}</div>
                   <div className="stat-label">URLs Shortened</div>
                 </div>
                 <div className="stat-card">
-                  <div className="stat-number">248</div>
+                  <div className="stat-number">-</div>
                   <div className="stat-label">Total Clicks</div>
                 </div>
                 <div className="stat-card">
-                  <div className="stat-number">5</div>
+                  <div className="stat-number">{userUrls.length}</div>
                   <div className="stat-label">Active URLs</div>
                 </div>
               </div>
@@ -423,35 +477,92 @@ function MainApp() {
           </div>
         );
       case 'urls':
+        const formatDate = (timestamp) => {
+          const date = new Date(timestamp);
+          return date.toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'short', 
+            day: 'numeric' 
+          });
+        };
+
+        const constructShortUrl = (shortCode) => {
+          const frontendHost = process.env.REACT_APP_FRONTEND_URL || window.location.origin;
+          return `${frontendHost}/${shortCode}`;
+        };
+
+        const copyUrlToClipboard = (url) => {
+          navigator.clipboard.writeText(url);
+          alert('URL copied to clipboard!');
+        };
+
         return (
           <div className="urls-section">
             <h3 className="section-title">My URLs</h3>
-            <div className="urls-list">
-              <div className="url-item">
-                <div className="url-info">
-                  <div className="original-url">https://www.example.com/very-long-url-that-needs-shortening</div>
-                  <div className="short-url">https://lil.url/abc123</div>
-                  <div className="url-stats">Created: Jan 15, 2025 • Clicks: 45</div>
-                </div>
-                <div className="url-actions">
-                  <button className="action-btn copy-btn">Copy</button>
-                  <button className="action-btn edit-btn">Edit</button>
-                  <button className="action-btn delete-btn">Delete</button>
-                </div>
+            {isLoadingUrls ? (
+              <div className="loading-container" style={{ 
+                textAlign: 'center', 
+                padding: '40px 0',
+                color: '#666'
+              }}>
+                <p>Loading your URLs...</p>
               </div>
-              <div className="url-item">
-                <div className="url-info">
-                  <div className="original-url">https://github.com/user/repository</div>
-                  <div className="short-url">https://lil.url/def456</div>
-                  <div className="url-stats">Created: Jan 10, 2025 • Clicks: 23</div>
-                </div>
-                <div className="url-actions">
-                  <button className="action-btn copy-btn">Copy</button>
-                  <button className="action-btn edit-btn">Edit</button>
-                  <button className="action-btn delete-btn">Delete</button>
-                </div>
+            ) : userUrls.length === 0 ? (
+              <div className="no-urls-container" style={{ 
+                textAlign: 'center', 
+                padding: '40px 0',
+                color: '#666'
+              }}>
+                <p>You haven't created any URLs yet.</p>
+                <p>Go to the Dashboard to shorten your first URL!</p>
               </div>
-            </div>
+            ) : (
+              <div className="urls-list">
+                {userUrls.map((urlItem) => (
+                  <div key={urlItem.id} className="url-item">
+                    <div className="url-info">
+                      <div className="original-url" title={urlItem.originalUrl}>
+                        {urlItem.originalUrl}
+                      </div>
+                      <div className="short-url">
+                        {constructShortUrl(urlItem.shortCode)}
+                      </div>
+                      <div className="url-stats">
+                        Created: {formatDate(urlItem.createdAt)} • Short Code: {urlItem.shortCode}
+                      </div>
+                    </div>
+                    <div className="url-actions">
+                      <button 
+                        className="action-btn copy-btn"
+                        onClick={() => copyUrlToClipboard(constructShortUrl(urlItem.shortCode))}
+                      >
+                        Copy
+                      </button>
+                      <button 
+                        className="action-btn edit-btn"
+                        onClick={() => {
+                          // TODO: Implement edit functionality
+                          alert('Edit functionality coming soon!');
+                        }}
+                      >
+                        Edit
+                      </button>
+                      <button 
+                        className="action-btn delete-btn"
+                        onClick={() => {
+                          // TODO: Implement delete functionality
+                          if (window.confirm('Are you sure you want to delete this URL?')) {
+                            alert('Delete functionality coming soon!');
+                          }
+                        }}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         );
       case 'analytics':
