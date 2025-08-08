@@ -53,8 +53,16 @@ function RedirectHandler() {
   );
 }
 
+const randomUrls = [
+  'https://www.google.com/search?q=react+hooks',
+  'https://www.openai.com/blog/chatgpt',
+  'http://www.miu.edu/campus-life',
+  'https://www.github.com/quynhdinh/lil-url',
+  'https://www.stackoverflow.com/questions/how-to-use-react-hooks',
+];
+
 function MainApp() {
-  const [longUrl, setLongUrl] = useState('https://www.nbcnews.com/news/obituaries/ozzy-osbourne-photos-young-black-sabbath-final-concert-before-death-rcna220337?utm_source=firefox-newtab-en-us');
+  const [longUrl, setLongUrl] = useState(randomUrls[Math.floor(Math.random() * randomUrls.length)]);
   const [shortenedUrl, setShortenedUrl] = useState('');
   const [customShortCode, setCustomShortCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -522,7 +530,10 @@ function MainApp() {
           return date.toLocaleDateString('en-US', { 
             year: 'numeric', 
             month: 'short', 
-            day: 'numeric' 
+            day: 'numeric', 
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
           });
         };
 
