@@ -66,6 +66,7 @@ function MainApp() {
   const [activeSection, setActiveSection] = useState('dashboard');
   const [userUrls, setUserUrls] = useState([]);
   const [isLoadingUrls, setIsLoadingUrls] = useState(false);
+  const [notification, setNotification] = useState({ message: '', type: '', show: false });
   const [editProfileData, setEditProfileData] = useState({
     name: '',
     email: '',
@@ -85,6 +86,20 @@ function MainApp() {
     password: 'password123',
     id: 1
   });
+
+  // Show notification function
+  const showNotification = (message, type = 'info') => {
+    setNotification({ message, type, show: true });
+    // Auto-hide after 5 seconds
+    setTimeout(() => {
+      setNotification(prev => ({ ...prev, show: false }));
+    }, 5000);
+  };
+
+  // Hide notification function
+  const hideNotification = () => {
+    setNotification(prev => ({ ...prev, show: false }));
+  };
 
   // Define fetchUserUrls function before useEffect hooks
   const fetchUserUrls = useCallback(async () => {
@@ -165,7 +180,7 @@ function MainApp() {
 
   const handleShortenUrl = async () => {
     if (!longUrl.trim()) {
-      alert('Please enter a URL to shorten');
+      showNotification('Please enter a URL to shorten', 'error');
       return;
     }
 
@@ -212,7 +227,7 @@ function MainApp() {
       
     } catch (error) {
       console.error('Error shortening URL:', error);
-      alert('Error shortening URL. Please check if the backend is running and try again.');
+      showNotification('Error shortening URL. Please check if the backend is running and try again.', 'error');
     } finally {
       setIsLoading(false);
     }
@@ -220,7 +235,7 @@ function MainApp() {
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(shortenedUrl);
-    alert('URL copied to clipboard!');
+    showNotification('URL copied to clipboard!', 'success');
   };
 
   const handleRedirect = async (code) => {
@@ -240,14 +255,14 @@ function MainApp() {
           // Redirect to the original URL
           window.location.href = originalUrl;
         } else {
-          alert('URL not found');
+          showNotification('URL not found', 'error');
         }
       } else {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
     } catch (error) {
       console.error('Error redirecting:', error);
-      alert('Error: Shortened URL not found or expired.');
+      showNotification('Error: Shortened URL not found or expired.', 'error');
     }
   };
 
@@ -278,7 +293,7 @@ function MainApp() {
       console.log('Sign up successful:', data);
       
       // Show success message
-      alert('Account created successfully! You can now sign in.');
+      showNotification('Account created successfully! You can now sign in.', 'success');
       
       // Close modal and reset form
       setShowSignUpModal(false);
@@ -289,7 +304,7 @@ function MainApp() {
       
     } catch (error) {
       console.error('Error signing up:', error);
-      alert(`Error creating account: ${error.message}`);
+      showNotification(`Error creating account: ${error.message}`, 'error');
     }
   };
 
@@ -343,7 +358,7 @@ function MainApp() {
 
     } catch (error) {
       console.error('Error signing in:', error);
-      alert(`Error signing in: ${error.message}`);
+      showNotification(`Error signing in: ${error.message}`, 'error');
     }
   };
 
@@ -380,7 +395,7 @@ function MainApp() {
       id: currentUser.id
     });
     
-    alert('Profile updated successfully!');
+    showNotification('Profile updated successfully!', 'success');
     setShowEditProfile(false);
   };
 
@@ -517,7 +532,7 @@ function MainApp() {
 
         const copyUrlToClipboard = (url) => {
           navigator.clipboard.writeText(url);
-          alert('URL copied to clipboard!');
+          showNotification('URL copied to clipboard!', 'success');
         };
 
         return (
@@ -566,7 +581,7 @@ function MainApp() {
                         className="action-btn edit-btn"
                         onClick={() => {
                           // TODO: Implement edit functionality
-                          alert('Edit functionality coming soon!');
+                          showNotification('Edit functionality coming soon!', 'info');
                         }}
                       >
                         Edit
@@ -576,7 +591,7 @@ function MainApp() {
                         onClick={() => {
                           // TODO: Implement delete functionality
                           if (window.confirm('Are you sure you want to delete this URL?')) {
-                            alert('Delete functionality coming soon!');
+                            showNotification('Delete functionality coming soon!', 'info');
                           }
                         }}
                       >
@@ -1012,6 +1027,22 @@ function MainApp() {
                 Sign In
               </button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Notification Component */}
+      {notification.show && (
+        <div className={`notification ${notification.type}`}>
+          <div className="notification-content">
+            <span className="notification-message">{notification.message}</span>
+            <button 
+              className="notification-close"
+              onClick={hideNotification}
+              aria-label="Close notification"
+            >
+              ×
+            </button>
           </div>
         </div>
       )}
