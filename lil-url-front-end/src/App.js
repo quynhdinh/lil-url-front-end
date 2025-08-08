@@ -75,14 +75,14 @@ function MainApp() {
   
   // Sign up form state
   const [signUpData, setSignUpData] = useState({
-    name: 'John Doe',
-    email: 'john.doe@miu.edu',
+    name: 'Quynh Dinh',
+    email: 'vdinh@miu.edu',
     password: 'password123'
   });
   
   // Sign in form state
   const [signInData, setSignInData] = useState({
-    email: 'john.doe@miu.edu',
+    email: 'vdinh@miu.edu',
     password: 'password123',
     id: 1
   });
@@ -298,8 +298,8 @@ function MainApp() {
       
       // Close modal and reset form
       setShowSignUpModal(false);
-      setSignUpData({ name: 'John Doe', email: 'john.doe@miu.edu', password: 'password123' });
-      
+      setSignUpData({ name: 'Quynh Dinh', email: 'vdinh@miu.edu', password: 'password123' });
+
       // Optionally open sign in modal
       setShowSignInModal(true);
       
@@ -404,8 +404,8 @@ function MainApp() {
     setShowSignUpModal(false);
     setShowSignInModal(false);
     setShowEditProfile(false);
-    setSignUpData({ name: 'John Doe', email: 'john.doe@miu.edu', password: 'password123' });
-    setSignInData({ email: 'john.doe@miu.edu', password: 'password123', id: 1 });
+    setSignUpData({ name: 'Quynh Dinh', email: 'vdinh@miu.edu', password: 'password123' });
+    setSignInData({ email: 'vdinh@miu.edu', password: 'password123', id: 1 });
   };
 
   const renderDashboardContent = () => {
@@ -955,7 +955,7 @@ function MainApp() {
                   value={signUpData.name}
                   onChange={(e) => setSignUpData({...signUpData, name: e.target.value})}
                   className="form-input"
-                  placeholder="John Doe"
+                  placeholder="Quynh Dinh"
                   required
                 />
               </div>
@@ -967,7 +967,7 @@ function MainApp() {
                   value={signUpData.email}
                   onChange={(e) => setSignUpData({...signUpData, email: e.target.value})}
                   className="form-input"
-                  placeholder="john.doe@miu.edu"
+                  placeholder="vdinh@miu.edu"
                   required
                 />
               </div>
@@ -1008,7 +1008,7 @@ function MainApp() {
                   value={signInData.email}
                   onChange={(e) => setSignInData({...signInData, email: e.target.value, id: 1})}
                   className="form-input"
-                  placeholder="john.doe@miu.edu"
+                  placeholder="vdinh@miu.edu"
                   required
                 />
               </div>
