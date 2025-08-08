@@ -202,7 +202,8 @@ function MainApp() {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorData = await response.json();
+        throw new Error(`Error: ${errorData.message}`);
       }
 
       const data = await response.json();
@@ -227,7 +228,7 @@ function MainApp() {
       
     } catch (error) {
       console.error('Error shortening URL:', error);
-      showNotification('Error shortening URL. Please check if the backend is running and try again.', 'error');
+      showNotification(`Error shortening URL. ${error.message}`, 'error');
     } finally {
       setIsLoading(false);
     }
