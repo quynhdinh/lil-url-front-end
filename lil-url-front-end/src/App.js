@@ -195,11 +195,20 @@ function MainApp() {
     setIsLoading(true);
     try {
       const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8080';
+
+      const token = localStorage.getItem('authToken');
+
+      const headers = {
+        'Content-Type': 'application/json',
+      };
+      
+      // Add authorization header if token exists
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
       const response = await fetch(`${backendUrl}/api/shorten`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: headers,
         body: JSON.stringify({
           url: longUrl.trim(),
           // Include user ID if logged in
