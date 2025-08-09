@@ -56,7 +56,7 @@ function RedirectHandler() {
 const randomUrls = [
   'https://www.google.com/search?q=react+hooks',
   'https://www.openai.com/blog/chatgpt',
-  'http://www.miu.edu/campus-life',
+  'https://www.miu.edu/campus-life',
   'https://www.github.com/quynhdinh/lil-url',
   'https://www.stackoverflow.com/questions/how-to-use-react-hooks',
 ];
