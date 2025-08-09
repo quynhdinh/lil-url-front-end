@@ -305,7 +305,8 @@ function MainApp() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+        const msg = errorData.error || `HTTP error! status: ${response.status}`;
+        throw new Error(msg);
       }
 
       const data = await response.json();
@@ -343,7 +344,7 @@ function MainApp() {
           password: signInData.password
         }),
       });
-      console.log("Response received:", response);
+      // console.log("Response received:", response);
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -351,9 +352,9 @@ function MainApp() {
       }
 
       const data = await response.json();
-      console.log('Sign in successful:', data);
+      // console.log('Sign in successful:', data);
       
-      console.log(data);
+      // console.log(data);
       // Set user data from backend response
       const userData = {
         name: data.fullName || data.name || 'User',
@@ -422,7 +423,7 @@ function MainApp() {
     setShowSignUpModal(false);
     setShowSignInModal(false);
     setShowEditProfile(false);
-    setSignUpData({ name: 'Quynh Dinh', email: 'vdinh@miu.edu', password: 'password123' });
+    setSignUpData({ name: 'John Doe', email: 'john.doe@miu.edu', password: 'password123' });
     setSignInData({ email: 'vdinh@miu.edu', password: 'password123', id: 1 });
   };
 
@@ -1016,7 +1017,7 @@ function MainApp() {
                   value={signUpData.name}
                   onChange={(e) => setSignUpData({...signUpData, name: e.target.value})}
                   className="form-input"
-                  placeholder="Quynh Dinh"
+                  placeholder="John Doe"
                   required
                 />
               </div>
@@ -1028,7 +1029,7 @@ function MainApp() {
                   value={signUpData.email}
                   onChange={(e) => setSignUpData({...signUpData, email: e.target.value})}
                   className="form-input"
-                  placeholder="vdinh@miu.edu"
+                  placeholder="john.doe@miu.edu"
                   required
                 />
               </div>
