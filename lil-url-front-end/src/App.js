@@ -75,6 +75,7 @@ function MainApp() {
   const [userUrls, setUserUrls] = useState([]);
   const [isLoadingUrls, setIsLoadingUrls] = useState(false);
   const [notification, setNotification] = useState({ message: '', type: '', show: false });
+  const [confirmDialog, setConfirmDialog] = useState({ show: false, message: '', onConfirm: null });
   const [editProfileData, setEditProfileData] = useState({
     name: '',
     email: '',
@@ -581,12 +582,26 @@ function MainApp() {
                 {userUrls.map((urlItem) => (
                   <div key={urlItem.id} className="url-item">
                     <div className="url-info">
-                      <div className="original-url" title={urlItem.originalUrl}>
+                      <a 
+                        href={urlItem.originalUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="original-url" 
+                        title={urlItem.originalUrl}
+                        style={{ textDecoration: 'none', color: 'inherit' }}
+                      >
                         {urlItem.originalUrl}
-                      </div>
-                      <div className="short-url">
+                      </a>
+                      <br/>
+                      <a
+                        href={constructShortUrl(urlItem.shortCode)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="short-url"
+                        style={{ textDecoration: 'none', color: '#007bff' }}
+                      >
                         {constructShortUrl(urlItem.shortCode)}
-                      </div>
+                      </a>
                       <div className="url-stats">
                         Created: {formatDate(urlItem.createdAt)} • Short Code: {urlItem.shortCode}
                       </div>
@@ -610,10 +625,36 @@ function MainApp() {
                       <button 
                         className="action-btn delete-btn"
                         onClick={() => {
-                          // TODO: Implement delete functionality
-                          if (window.confirm('Are you sure you want to delete this URL?')) {
-                            showNotification('Delete functionality coming soon!', 'info');
-                          }
+                          setConfirmDialog({
+                            show: true,
+                            message: 'Are you sure you want to delete this URL?',
+                            onConfirm: async () => {
+                              try {
+                                const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8080';
+                                const token = localStorage.getItem('authToken');
+                                
+                                const response = await fetch(`${backendUrl}/api/urls?shortCode=${urlItem.shortCode}`, {
+                                  method: 'DELETE',
+                                  headers: {
+                                    'Content-Type': 'application/json',
+                                    ...(token && { 'Authorization': `Bearer ${token}` })
+                                  }
+                                });
+
+                                if (!response.ok) {
+                                  throw new Error('Failed to delete URL');
+                                }
+
+                                fetchUserUrls();
+                                showNotification('URL deleted successfully!', 'success');
+                              } catch (error) {
+                                console.error('Error deleting URL:', error);
+                                showNotification('Error deleting URL. Please try again.', 'error');
+                              } finally {
+                                setConfirmDialog({ show: false, message: '', onConfirm: null });
+                              }
+                            }
+                          });
                         }}
                       >
                         Delete
@@ -1064,6 +1105,36 @@ function MainApp() {
             >
               ×
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation Dialog */}
+      {confirmDialog.show && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ maxWidth: '400px', padding: '20px' }}>
+            <div className="confirm-dialog">
+              <h3 style={{ marginBottom: '20px', color: '#333' }}>Confirm Action</h3>
+              <p style={{ marginBottom: '30px', color: '#666' }}>{confirmDialog.message}</p>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                <button
+                  onClick={() => setConfirmDialog({ show: false, message: '', onConfirm: null })}
+                  className="auth-btn"
+                  style={{ backgroundColor: '#6c757d' }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    confirmDialog.onConfirm();
+                  }}
+                  className="auth-btn"
+                  style={{ backgroundColor: '#dc3545' }}
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
