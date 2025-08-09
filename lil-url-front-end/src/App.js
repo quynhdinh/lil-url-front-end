@@ -614,15 +614,16 @@ function MainApp() {
                       >
                         Copy
                       </button>
+                      {/* Edit button temporarily disabled
                       <button 
                         className="action-btn edit-btn"
                         onClick={() => {
-                          // TODO: Implement edit functionality
                           showNotification('Edit functionality coming soon!', 'info');
                         }}
                       >
                         Edit
                       </button>
+                      */}
                       <button 
                         className="action-btn delete-btn"
                         onClick={() => {
