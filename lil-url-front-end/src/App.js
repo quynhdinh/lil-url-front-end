@@ -74,6 +74,7 @@ function MainApp() {
   const [activeSection, setActiveSection] = useState('dashboard');
   const [userUrls, setUserUrls] = useState([]);
   const [isLoadingUrls, setIsLoadingUrls] = useState(false);
+  const [totalClicks, setTotalClicks] = useState(0);
   const [notification, setNotification] = useState({ message: '', type: '', show: false });
   const [confirmDialog, setConfirmDialog] = useState({ show: false, message: '', onConfirm: null });
   const [editProfileData, setEditProfileData] = useState({
@@ -153,6 +154,40 @@ function MainApp() {
     }
   }, [currentUser?.id]);
 
+  // Fetch total clicks count
+  const fetchTotalClicks = useCallback(async () => {
+    try {
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8080';
+      const token = localStorage.getItem('authToken');
+      
+      const headers = {
+        'Content-Type': 'application/json',
+      };
+      
+      // Add authorization header if token exists
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const response = await fetch(`${backendUrl}/api/clicks/count`, {
+        method: 'GET',
+        headers: headers,
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('Fetched total clicks:', data);
+      setTotalClicks(data.linkCount || data.count || 0);
+      
+    } catch (error) {
+      console.error('Error fetching total clicks:', error);
+      setTotalClicks(0); // Set to 0 on error
+    }
+  }, []);
+
   // Check for existing authentication token on app load
   useEffect(() => {
     const token = localStorage.getItem('authToken');
@@ -177,8 +212,9 @@ function MainApp() {
   useEffect(() => {
     if (isLoggedIn && currentUser?.id) {
       fetchUserUrls();
+      fetchTotalClicks();
     }
-  }, [isLoggedIn, currentUser?.id, fetchUserUrls]);
+  }, [isLoggedIn, currentUser?.id, fetchUserUrls, fetchTotalClicks]);
 
   // Fetch user URLs when switching to URLs section
   useEffect(() => {
@@ -186,6 +222,13 @@ function MainApp() {
       fetchUserUrls();
     }
   }, [activeSection, isLoggedIn, currentUser?.id, fetchUserUrls]);
+
+  // Fetch total clicks when switching to dashboard
+  useEffect(() => {
+    if (activeSection === 'dashboard' && isLoggedIn && currentUser?.id) {
+      fetchTotalClicks();
+    }
+  }, [activeSection, isLoggedIn, currentUser?.id, fetchTotalClicks]);
 
   const handleShortenUrl = async () => {
     if (!longUrl.trim()) {
@@ -242,6 +285,7 @@ function MainApp() {
       // Refresh user URLs if user is logged in
       if (isLoggedIn && currentUser?.id) {
         fetchUserUrls();
+        fetchTotalClicks(); // Also refresh total clicks count
       }
       
     } catch (error) {
@@ -524,7 +568,7 @@ function MainApp() {
                   <div className="stat-label">URLs Shortened</div>
                 </div>
                 <div className="stat-card">
-                  <div className="stat-number">-</div>
+                  <div className="stat-number">{totalClicks}</div>
                   <div className="stat-label">Total Clicks</div>
                 </div>
                 <div className="stat-card">
@@ -668,40 +712,40 @@ function MainApp() {
             )}
           </div>
         );
-      case 'analytics':
-        return (
-          <div className="analytics-section">
-            <h3 className="section-title">Analytics</h3>
-            <div className="analytics-content">
-              <div className="analytics-card">
-                <h4>Top Performing URLs</h4>
-                <div className="analytics-list">
-                  <div className="analytics-item">
-                    <span>lil.url/abc123</span>
-                    <span>45 clicks</span>
-                  </div>
-                  <div className="analytics-item">
-                    <span>lil.url/def456</span>
-                    <span>23 clicks</span>
-                  </div>
-                </div>
-              </div>
-              <div className="analytics-card">
-                <h4>Recent Activity</h4>
-                <div className="analytics-list">
-                  <div className="analytics-item">
-                    <span>New URL created</span>
-                    <span>2 hours ago</span>
-                  </div>
-                  <div className="analytics-item">
-                    <span>URL clicked 5 times</span>
-                    <span>1 day ago</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
+      // case 'analytics':
+      //   return (
+      //     <div className="analytics-section">
+      //       <h3 className="section-title">Analytics</h3>
+      //       <div className="analytics-content">
+      //         <div className="analytics-card">
+      //           <h4>Top Performing URLs</h4>
+      //           <div className="analytics-list">
+      //             <div className="analytics-item">
+      //               <span>lil.url/abc123</span>
+      //               <span>45 clicks</span>
+      //             </div>
+      //             <div className="analytics-item">
+      //               <span>lil.url/def456</span>
+      //               <span>23 clicks</span>
+      //             </div>
+      //           </div>
+      //         </div>
+      //         <div className="analytics-card">
+      //           <h4>Recent Activity</h4>
+      //           <div className="analytics-list">
+      //             <div className="analytics-item">
+      //               <span>New URL created</span>
+      //               <span>2 hours ago</span>
+      //             </div>
+      //             <div className="analytics-item">
+      //               <span>URL clicked 5 times</span>
+      //               <span>1 day ago</span>
+      //             </div>
+      //           </div>
+      //         </div>
+      //       </div>
+      //     </div>
+      //   );
       case 'settings':
         return (
           <div className="settings-section">
@@ -811,13 +855,13 @@ function MainApp() {
                     <span className="nav-icon">🔗</span>
                     My URLs
                   </button>
-                  <button 
+                  {/* <button 
                     className={`nav-item ${activeSection === 'analytics' ? 'active' : ''}`}
                     onClick={() => setActiveSection('analytics')}
                   >
                     <span className="nav-icon">📈</span>
                     Analytics
-                  </button>
+                  </button> */}
                   <button 
                     className={`nav-item ${activeSection === 'settings' ? 'active' : ''}`}
                     onClick={() => setActiveSection('settings')}
