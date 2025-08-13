@@ -75,6 +75,8 @@ function MainApp() {
   const [userUrls, setUserUrls] = useState([]);
   const [isLoadingUrls, setIsLoadingUrls] = useState(false);
   const [totalClicks, setTotalClicks] = useState(0);
+  const [showStatsModal, setShowStatsModal] = useState(false);
+  const [urlStats, setUrlStats] = useState(null);
   const [notification, setNotification] = useState({ message: '', type: '', show: false });
   const [confirmDialog, setConfirmDialog] = useState({ show: false, message: '', onConfirm: null });
   const [editProfileData, setEditProfileData] = useState({
@@ -187,6 +189,41 @@ function MainApp() {
       setTotalClicks(0); // Set to 0 on error
     }
   }, []);
+
+  // Fetch URL statistics
+  const fetchUrlStats = async (shortCode) => {
+    try {
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8080';
+      const token = localStorage.getItem('authToken');
+      
+      const headers = {
+        'Content-Type': 'application/json',
+      };
+      
+      // Add authorization header if token exists
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const response = await fetch(`${backendUrl}/api/clicks/statistics/${shortCode}`, {
+        method: 'GET',
+        headers: headers,
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('Fetched URL stats:', data);
+      setUrlStats(data);
+      setShowStatsModal(true);
+      
+    } catch (error) {
+      console.error('Error fetching URL stats:', error);
+      showNotification('Error fetching URL statistics. Please try again.', 'error');
+    }
+  };
 
   // Check for existing authentication token on app load
   useEffect(() => {
@@ -467,6 +504,8 @@ function MainApp() {
     setShowSignUpModal(false);
     setShowSignInModal(false);
     setShowEditProfile(false);
+    setShowStatsModal(false);
+    setUrlStats(null);
     setSignUpData({ name: 'John Doe', email: 'john.doe@miu.edu', password: 'password123' });
     setSignInData({ email: 'vdinh@miu.edu', password: 'password123', id: 1 });
   };
@@ -658,16 +697,15 @@ function MainApp() {
                       >
                         Copy
                       </button>
-                      {/* Edit button temporarily disabled
                       <button 
                         className="action-btn edit-btn"
                         onClick={() => {
-                          showNotification('Edit functionality coming soon!', 'info');
+                          fetchUrlStats(urlItem.shortCode);
                         }}
                       >
-                        Edit
+                        Stats
                       </button>
-                      */}
+                     
                       <button 
                         className="action-btn delete-btn"
                         onClick={() => {
@@ -1135,6 +1173,89 @@ function MainApp() {
                 Sign In
               </button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* URL Stats Modal */}
+      {showStatsModal && urlStats && (
+        <div className="modal-overlay" onClick={closeModals}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>URL Statistics</h3>
+              <button className="close-btn" onClick={closeModals}>×</button>
+            </div>
+            <div className="stats-modal-content" style={{ padding: '20px', color: '#333', fontSize: '16px' }}>
+              <div className="stats-item" style={{ marginBottom: '20px', lineHeight: '1.5' }}>
+                <strong style={{ color: '#333', fontSize: '16px' }}>Short Code:</strong> 
+                <span style={{ marginLeft: '10px', color: '#666' }}>{urlStats.shortCode}</span>
+              </div>
+              <div className="stats-item" style={{ marginBottom: '20px', lineHeight: '1.5', wordBreak: 'break-all' }}>
+                <strong style={{ color: '#333', fontSize: '16px' }}>Original URL:</strong> 
+                <a 
+                  href={urlStats.originalUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  style={{ color: '#007bff', textDecoration: 'none', marginLeft: '10px' }}
+                >
+                  {urlStats.originalUrl}
+                </a>
+              </div>
+              
+              <div style={{ marginTop: '30px' }}>
+                <h4 style={{ marginBottom: '20px', color: '#333', fontSize: '18px' }}>Statistics:</h4>
+                <div className="stats-vertical" style={{ 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  gap: '15px'
+                }}>
+                  <div className="stat-item" style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center',
+                    padding: '12px 15px', 
+                    backgroundColor: '#f8f9fa', 
+                    borderRadius: '6px',
+                    border: '1px solid #dee2e6'
+                  }}>
+                    <span style={{ fontSize: '16px', color: '#333' }}>Total Clicks</span>
+                    <span style={{ fontSize: '18px', fontWeight: 'bold', color: '#007bff' }}>
+                      {urlStats.totalClicks || 0}
+                    </span>
+                  </div>
+                  
+                  <div className="stat-item" style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center',
+                    padding: '12px 15px', 
+                    backgroundColor: '#f8f9fa', 
+                    borderRadius: '6px',
+                    border: '1px solid #dee2e6'
+                  }}>
+                    <span style={{ fontSize: '16px', color: '#333' }}>Unique Users</span>
+                    <span style={{ fontSize: '18px', fontWeight: 'bold', color: '#28a745' }}>
+                      {urlStats.uniqueUsers || 0}
+                    </span>
+                  </div>
+                  
+                  <div className="stat-item" style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center',
+                    padding: '12px 15px', 
+                    backgroundColor: '#f8f9fa', 
+                    borderRadius: '6px',
+                    border: '1px solid #dee2e6'
+                  }}>
+                    <span style={{ fontSize: '16px', color: '#333' }}>Anonymous Clicks</span>
+                    <span style={{ fontSize: '18px', fontWeight: 'bold', color: '#ffc107' }}>
+                      {urlStats.anonymousClicks || 0}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}
